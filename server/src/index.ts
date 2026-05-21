@@ -5,6 +5,7 @@ import { authRouter } from "./routes/auth.js";
 import { databasesRouter } from "./routes/databases.js";
 import { entriesRouter } from "./routes/entries.js";
 import { geocodeRouter } from "./routes/geocode.js";
+import { pagesRouter } from "./routes/pages.js";
 
 const PORT = Number(process.env.PORT ?? 5179);
 
@@ -18,6 +19,7 @@ async function main() {
   app.use("/api/auth", authRouter);
   app.use("/api/databases", databasesRouter);
   app.use("/api", entriesRouter);
+  app.use("/api", pagesRouter);
   app.use("/api/geocode", geocodeRouter);
 
   app.get("/api/health", (_req, res) => res.json({ ok: true }));

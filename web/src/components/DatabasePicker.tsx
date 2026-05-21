@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import type { DatabaseDetail, DatabaseSummary } from "../types";
+import { IconDatabase, IconMoon, IconSun } from "./icons";
+
+type Theme = "light" | "dark";
 
 type Props = {
   onSelected: (selection: {
@@ -8,9 +11,11 @@ type Props = {
     dataSourceId: string;
     placeProperty: string;
   }) => void;
+  theme: Theme;
+  onToggleTheme: () => void;
 };
 
-export function DatabasePicker({ onSelected }: Props) {
+export function DatabasePicker({ onSelected, theme, onToggleTheme }: Props) {
   const [databases, setDatabases] = useState<DatabaseSummary[] | null>(null);
   const [error, setError] = useState<string | undefined>(undefined);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -53,11 +58,23 @@ export function DatabasePicker({ onSelected }: Props) {
     });
   }
 
+  const themeToggle = (
+    <button
+      className="icon-button theme-toggle-corner"
+      onClick={onToggleTheme}
+      title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+      aria-label="Toggle theme"
+    >
+      {theme === "dark" ? <IconSun /> : <IconMoon />}
+    </button>
+  );
+
   if (detail) {
     const placeProps = detail.properties.filter((p) => p.type === "place");
     return (
-      <div className="centered">
-        <div className="card">
+      <div className="modal-backdrop">
+        {themeToggle}
+        <div className="modal">
           <h2>{detail.title}</h2>
           {placeProps.length === 0 ? (
             <p className="error">No "Place" property found. Add one in Notion and reload.</p>
@@ -65,11 +82,12 @@ export function DatabasePicker({ onSelected }: Props) {
             <>
               <p>Pick which Place property to edit:</p>
               <select
+                className="input-bordered"
                 value={chosenProperty}
                 onChange={(e) => setChosenProperty(e.target.value)}
               >
                 <option value="" disabled>
-                  -- select --
+                  — select —
                 </option>
                 {placeProps.map((p) => (
                   <option key={p.id} value={p.name}>
@@ -79,9 +97,16 @@ export function DatabasePicker({ onSelected }: Props) {
               </select>
             </>
           )}
-          <div className="row">
-            <button onClick={() => setDetail(null)}>Back</button>
-            <button className="primary" disabled={!chosenProperty} onClick={confirm}>
+          <div className="modal-row">
+            <button className="button-ghost" onClick={() => setDetail(null)}>
+              Back
+            </button>
+            <span style={{ flex: 1 }} />
+            <button
+              className="button-primary"
+              disabled={!chosenProperty}
+              onClick={confirm}
+            >
               Open editor
             </button>
           </div>
@@ -92,32 +117,45 @@ export function DatabasePicker({ onSelected }: Props) {
   }
 
   return (
-    <div className="centered">
-      <div className="card db-picker">
+    <div className="modal-backdrop">
+      {themeToggle}
+      <div className="modal wide">
         <h2>Pick a database</h2>
         <p>
           Showing databases your integration is connected to. Don't see yours? Open it in
-          Notion → <strong>...</strong> → <strong>Connections</strong> → add the
-          integration.
+          Notion → <strong>…</strong> → <strong>Connections</strong> → add the integration.
         </p>
-        {!databases && !error && <p>Loading...</p>}
+        {!databases && !error && <p className="muted">Loading…</p>}
         {error && <div className="error">{error}</div>}
         {databases && (
           <div className="db-list">
             {databases.length === 0 && (
-              <p className="error">No databases visible to this integration.</p>
+              <p className="error" style={{ padding: 12 }}>
+                No databases visible to this integration.
+              </p>
             )}
             {databases.map((db) => (
               <div
                 key={db.id}
-                className="db"
+                className="db-row"
                 onClick={() => selectDatabase(db)}
                 role="button"
                 tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    selectDatabase(db);
+                  }
+                }}
               >
-                <div style={{ fontWeight: 600 }}>{db.title}</div>
-                <div style={{ color: "var(--muted)", fontSize: 12 }}>
-                  {loadingId === db.id ? "Loading..." : `id: ${db.id}`}
+                <span className="db-icon">
+                  <IconDatabase />
+                </span>
+                <div className="db-text">
+                  <div className="db-title">{db.title || "Untitled"}</div>
+                  <div className="db-sub">
+                    {loadingId === db.id ? "Loading…" : db.id}
+                  </div>
                 </div>
               </div>
             ))}

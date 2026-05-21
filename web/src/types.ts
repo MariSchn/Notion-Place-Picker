@@ -43,3 +43,21 @@ export type AuthStatus = {
   workspaceName?: string;
   error?: string;
 };
+
+// Notion property/block shapes are passed through from the API.
+// We keep them as `unknown`/`Record` and narrow at render time.
+export type NotionProperty = { type: string; id?: string } & Record<string, unknown>;
+export type NotionBlock = { id: string; type: string } & Record<string, unknown>;
+export type NotionIcon =
+  | { type: "emoji"; emoji: string }
+  | { type: "external"; external: { url: string } }
+  | { type: "file"; file: { url: string } }
+  | null;
+
+export type PageFull = {
+  id: string;
+  title: string;
+  icon: NotionIcon;
+  properties: Record<string, NotionProperty>;
+  blocks: NotionBlock[];
+};

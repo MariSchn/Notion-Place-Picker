@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Entry } from "../types";
 
 type Props = {
@@ -6,11 +6,18 @@ type Props = {
   selectedId: string | null;
   onSelect: (id: string) => void;
   loading: boolean;
+  filter: string;
+  onlyMissing: boolean;
 };
 
-export function EntryList({ entries, selectedId, onSelect, loading }: Props) {
-  const [filter, setFilter] = useState("");
-  const [onlyMissing, setOnlyMissing] = useState(false);
+export function EntryList({
+  entries,
+  selectedId,
+  onSelect,
+  loading,
+  filter,
+  onlyMissing,
+}: Props) {
   const listRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
@@ -46,44 +53,28 @@ export function EntryList({ entries, selectedId, onSelect, loading }: Props) {
   }, [filtered, selectedId, onSelect]);
 
   return (
-    <div className="list-pane">
-      <div className="list-controls">
-        <input
-          placeholder="Filter by title..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
-        <div className="toggles">
-          <label>
-            <input
-              type="checkbox"
-              checked={onlyMissing}
-              onChange={(e) => setOnlyMissing(e.target.checked)}
-            />
-            Show only missing
-          </label>
-          <span className="spacer" />
-          <span>{filtered.length} / {entries.length}</span>
+    <div className="sidebar-list" ref={listRef}>
+      {loading && entries.length === 0 && (
+        <div className="sidebar-empty">Loading entries…</div>
+      )}
+      {!loading && entries.length > 0 && filtered.length === 0 && (
+        <div className="sidebar-empty">No entries match.</div>
+      )}
+      {filtered.map((e) => (
+        <div
+          key={e.id}
+          data-id={e.id}
+          className={`sidebar-item${selectedId === e.id ? " selected" : ""}`}
+          onClick={() => onSelect(e.id)}
+        >
+          <span
+            className={`item-dot${e.place ? " set" : ""}`}
+            title={e.place ? `${e.place.lat}, ${e.place.lon}` : "Missing"}
+            aria-label={e.place ? "Place set" : "Place missing"}
+          />
+          <span className="item-title">{e.title || "Untitled"}</span>
         </div>
-      </div>
-      <div className="entry-list" ref={listRef}>
-        {loading && entries.length === 0 && <div style={{ padding: 12 }}>Loading...</div>}
-        {filtered.map((e) => (
-          <div
-            key={e.id}
-            data-id={e.id}
-            className={`entry${selectedId === e.id ? " selected" : ""}`}
-            onClick={() => onSelect(e.id)}
-          >
-            <div className="title">{e.title}</div>
-            {e.place ? (
-              <span className="badge set" title={`${e.place.lat}, ${e.place.lon}`}>📍 set</span>
-            ) : (
-              <span className="badge">— missing</span>
-            )}
-          </div>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }

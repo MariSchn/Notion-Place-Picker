@@ -4,6 +4,7 @@ import type {
   DatabaseSummary,
   Entry,
   GeocodeResult,
+  PageFull,
 } from "./types";
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -57,4 +58,5 @@ export const api = {
     call<{ results: GeocodeResult[] }>(`/api/geocode?q=${encodeURIComponent(q)}`).then(
       (r) => r.results,
     ),
+  getPage: (pageId: string) => call<PageFull>(`/api/pages/${pageId}/full`),
 };

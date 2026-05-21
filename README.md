@@ -1,4 +1,4 @@
-# Notion Place Setter
+# Notion Place Picker
 
 Local web app for filling and fixing the **Place** property in your Notion databases.
 
